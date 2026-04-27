@@ -33,44 +33,39 @@ function onEdit(e) {
 function odd_autoCalculation(e) {
   if (!e || !e.range) return;
   const sheet = e.range.getSheet();
-  if (sheet.getName() !== "날짜 계산기") return;
+  const sName = sheet.getName();
+  if (sName !== "날짜 계산기" && sName !== "날짜계산기") return;
   
   const col = e.range.getColumn();
   const row = e.range.getRow();
   
-  // 1. B열/F열 처리 (ODD 및 스프레드 계산)
-  const sName = sheet.getName();
-  if (sName === "날짜 계산기" || sName === "날짜계산기") {
-    // B열(테너) 또는 F열(Odd입력) 변경 시
-    if ((col === 2 && row >= 3) || (col === 6 && (row === 4 || row === 8 || row === 14 || row === 18))) {
-      if (row <= 25 || col === 6) {
-        if (typeof odd_runODDSetupFinal === 'function') odd_runODDSetupFinal(true);
-      }
-      if (row >= 26) {
-        if (typeof odd_runSpreadStartingCalculation === 'function') odd_runSpreadStartingCalculation(true);
-      }
-      if (typeof odd_runConfirmationAutomation === 'function') odd_runConfirmationAutomation();
+  // 1. 달력(B3:C22) 또는 ODD(F열) 변경 시 처리
+  if ((col === 2 || col === 3) && row >= 3 && row <= 22) {
+    if (typeof odd_runODDSetupFinal === 'function') odd_runODDSetupFinal(true);
+  }
+  
+  // 1-1. ODD 및 스프레드 계산 트리거 (B열, F열 등)
+  if ((col === 2 && row >= 3) || (col === 6 && (row === 4 || row === 8 || row === 14 || row === 18))) {
+    if (row <= 25 || col === 6) {
+      if (typeof odd_runODDSetupFinal === 'function') odd_runODDSetupFinal(true);
     }
-
-    // 1-1. 스프레드 기준가(C26 또는 D26) 변경 시 계산
-    if (row === 26 && (col === 3 || col === 4)) {
+    if (row >= 26) {
       if (typeof odd_runSpreadStartingCalculation === 'function') odd_runSpreadStartingCalculation(true);
     }
-
-    // 1-2. 스프레드 증감 자동 계산 (F26/G26/F27/G27)
-    if (typeof calculateSpreadChange === 'function') {
-      calculateSpreadChange(e);
-    }
+    if (typeof odd_runConfirmationAutomation === 'function') odd_runConfirmationAutomation();
   }
 
-  // 2. 컨포 자동 생성 처리 (Q17:U21)
+  // 1-2. 스프레드 기준가(C26 또는 D26) 변경 시 계산
+  if (row === 26 && (col === 3 || col === 4)) {
+    if (typeof odd_runSpreadStartingCalculation === 'function') odd_runSpreadStartingCalculation(true);
+  }
+
+  // 2. 컨포 자동 생성 처리 (Q17:U21 영역 감지)
   if (col >= 17 && col <= 21 && row >= 5) {
      if (typeof odd_runConfirmationAutomation === 'function') odd_runConfirmationAutomation();
   }
 
-  // 3. Swap Point 수정 시 Daily 실시간 계산 (J열 수정 시)
-  // J(10) / M(13) -> O(15) 
-  // J(10) / N(14) -> P(16)
+  // 3. Swap Point 수정 시 Daily 실시간 계산 (J열 10열)
   if (col === 10 && row >= 5 && row <= 16) {
     const pt = sheet.getRange(row, 10).getValue();
     const dToday = sheet.getRange(row, 13).getValue();
@@ -82,6 +77,12 @@ function odd_autoCalculation(e) {
     }
     odd_runODDSetupFinal(true);
   }
+
+  // 4. 26행/27행 자동 수식 (F/G열 기반)
+  if (typeof calculateSpreadChange === 'function') {
+    calculateSpreadChange(e);
+  }
+}
 
   // 4. 26행/27행 자동 수식 계산 (스프레드 증감.gs 호출)
   if (typeof calculateSpreadChange === 'function') {

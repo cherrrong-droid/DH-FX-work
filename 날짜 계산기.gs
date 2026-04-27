@@ -15,18 +15,20 @@ function odd_runODDSetupFinal(isAutomatic) {
     const d2 = parseODD(sheet.getRange("F14").getValue());
     if (d2) { sheet.getRange("F17").setValue(d2.s); sheet.getRange("G17").setValue(d2.e); }
 
-    // [추가] B3:B22 및 C3:C22에서 날짜수([30d]) 추출하여 M5:M16, N5:N16에 입력
+    // [개선] 달력 텍스트에서 숫자만 더 유연하게 추출 ([30d], 30d, 1d 등 모두 대응)
     const todayCal = sheet.getRange("B3:B22").getDisplayValues().flat();
     const tomCal = sheet.getRange("C3:C22").getDisplayValues().flat();
     
     const extractD = (str) => {
-      const m = String(str).match(/\[(\d+)[dD]\]/);
+      if (!str) return "";
+      // 대괄호 유무 상관없이 숫자 뒤에 d/D가 오는 패턴을 찾습니다.
+      const m = String(str).match(/(\d+)\s*[dD]/);
       return m ? parseInt(m[1]) : "";
     };
 
-    // M5:M16 (Today Day Count), N5:N16 (Tomorrow Day Count)
+    // M5:M16 (Today), N5:N16 (Tomorrow)
     let mVals = [], nVals = [];
-    for (let i = 2; i <= 13; i++) { // B5 to B16 (B3=index 0)
+    for (let i = 2; i <= 13; i++) { // B5 to B16
       mVals.push([extractD(todayCal[i])]);
       nVals.push([extractD(tomCal[i])]);
     }
@@ -46,7 +48,7 @@ function odd_runODDSetupFinal(isAutomatic) {
     let mList = [];
     for (let j = 0; j < mkt.length; j++) {
       const curR = 5 + j;
-      if (curR > 16) break; // [중요] 16행까지만 자동화 실행
+      if (curR > 16) break; // 16행 제한
 
       const t = (mkt[j][0] + "").toUpperCase().replace(/[^A-Z0-9\/]/g, "");
       if (pMap[t]) {
@@ -66,7 +68,7 @@ function odd_runODDSetupFinal(isAutomatic) {
         sheet.getRange(g[3]).setValue((r + (pt / 100)).toFixed(2));
       }
     });
-    if (!isAutomatic) SpreadsheetApp.getUi().alert("✅ ODD 완료 (16행 제한 적용)!");
+    if (!isAutomatic) SpreadsheetApp.getUi().alert("✅ ODD 및 날짜수 완료!");
   } catch (e) { console.log(e.message); }
 }
 

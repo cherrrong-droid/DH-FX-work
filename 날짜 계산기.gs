@@ -15,23 +15,43 @@ function odd_runODDSetupFinal(isAutomatic) {
     const d2 = parseODD(sheet.getRange("F14").getValue());
     if (d2) { sheet.getRange("F17").setValue(d2.s); sheet.getRange("G17").setValue(d2.e); }
 
-    // [개선] 달력 텍스트에서 숫자만 더 유연하게 추출 ([30d], 30d, 1d 등 모두 대응)
-    const todayCal = sheet.getRange("B3:B22").getDisplayValues().flat();
-    const tomCal = sheet.getRange("C3:C22").getDisplayValues().flat();
+    // [고도화] 이름 기반 매칭: I열의 테너(O/N, 6m 등)를 달력에서 찾아 해당 날짜수를 가져옵니다.
+    const todayCalRaw = sheet.getRange("B3:B22").getDisplayValues();
+    const tomCalRaw = sheet.getRange("C3:C22").getDisplayValues();
+    const marketTenors = sheet.getRange("I5:I16").getDisplayValues().flat();
     
     const extractD = (str) => {
       if (!str) return "";
-      // 대괄호 유무 상관없이 숫자 뒤에 d/D가 오는 패턴을 찾습니다.
       const m = String(str).match(/(\d+)\s*[dD]/);
       return m ? parseInt(m[1]) : "";
     };
 
-    // [수정] 인덱스 정밀 조정: 스프레드 5행(N5) -> 달력 3행(index 0) 매핑
+    const parseCalToMap = (rows) => {
+      let map = {};
+      rows.forEach(r => {
+        const txt = String(r[0]).trim();
+        if (!txt) return;
+        // 테너 추출 (O/N, 1m, 6m 등)
+        const tMatch = txt.split(/[^A-Z0-9\/]/i)[0].toUpperCase().replace(/[^A-Z0-9\/]/g, "");
+        if (tMatch) map[tMatch] = extractD(txt);
+      });
+      return map;
+    };
+
+    const todayMap = parseCalToMap(todayCalRaw);
+    const tomMap = parseCalToMap(tomCalRaw);
+
     let mVals = [], nVals = [];
-    for (let i = 0; i < 12; i++) { // 달력의 3행(0) ~ 14행(11)을 가져옴
-      mVals.push([extractD(todayCal[i])]);
-      nVals.push([extractD(tomCal[i])]);
-    }
+    marketTenors.forEach(tRaw => {
+      const tClean = String(tRaw).toUpperCase().replace(/[^A-Z0-9\/]/g, "");
+      // 1달 -> 1M, 1년 -> 1Y 등으로 정규화 (필요시)
+      let tKey = tClean;
+      if (tClean === "ON") tKey = "ON"; if (tClean === "TN") tKey = "TN"; if (tClean === "SN") tKey = "SN";
+      
+      mVals.push([todayMap[tKey] || ""]);
+      nVals.push([tomMap[tKey] || ""]);
+    });
+
     sheet.getRange("M5:M16").setValues(mVals);
     sheet.getRange("N5:N16").setValues(nVals);
 

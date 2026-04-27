@@ -26,9 +26,9 @@ function odd_runODDSetupFinal(isAutomatic) {
       return m ? parseInt(m[1]) : "";
     };
 
-    // M5:M16 (Today), N5:N16 (Tomorrow)
+    // [수정] 인덱스 정밀 조정: 스프레드 5행(N5) -> 달력 3행(index 0) 매핑
     let mVals = [], nVals = [];
-    for (let i = 2; i <= 13; i++) { // B5 to B16
+    for (let i = 0; i < 12; i++) { // 달력의 3행(0) ~ 14행(11)을 가져옴
       mVals.push([extractD(todayCal[i])]);
       nVals.push([extractD(tomCal[i])]);
     }

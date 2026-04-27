@@ -25,9 +25,8 @@ function odd_runODDSetupFinal(isAutomatic) {
     };
 
     // M5:M16 (Today Day Count), N5:N16 (Tomorrow Day Count)
-    // Row 5 is index 2 in B3:B22 (B3=0, B4=1, B5=2)
     let mVals = [], nVals = [];
-    for (let i = 2; i <= 13; i++) { // B5 to B16
+    for (let i = 2; i <= 13; i++) { // B5 to B16 (B3=index 0)
       mVals.push([extractD(todayCal[i])]);
       nVals.push([extractD(tomCal[i])]);
     }

@@ -1,20 +1,32 @@
 /**
- * 컨펌 생성 자동화 스크립트 (Reverted Parsing with Merge Fix)
+ * 컨펌 생성 자동화 스크립트 (Flexible Trade Detection)
  */
 
 function odd_runConfirmationAutomation() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("날짜 계산기");
+  const sheet = SpreadsheetApp.getActive().getSheetByName("날짜 계산기") || SpreadsheetApp.getActive().getSheetByName("날짜계산기");
   if (!sheet) return;
   const pDict = odd_parseC(sheet);
+  const qVals = sheet.getRange("Q5:Q210").getValues(); // Q열 전체 검색
   
+  // 기존 8행 블록 구조를 유지하되, 각 블록마다 독립적으로 명령어 검색
   for (let startRow = 5; startRow <= 205; startRow += 8) {
-    const vals = sheet.getRange(startRow, 17, 2, 5).getValues().flat(); // Q열(17)로 이동
-    const input = vals.find(v => String(v).includes("<") || String(v).includes(">"));
-    if (!input) continue;
+    const blockInputRange = sheet.getRange(startRow, 17, 2, 5);
+    const blockVals = blockInputRange.getValues().flat();
+    const input = blockVals.find(v => String(v).includes("<") || String(v).includes(">"));
+    
+    // 만약 명령어가 없으면 해당 블록의 출력 영역을 비웁니다.
+    if (!input) {
+      // 입력창이 완전히 비어있을 때만 하단 컨포를 지웁니다 (수동 입력 보호)
+      const isEmpty = blockVals.every(v => !v || String(v).trim() === "");
+      if (isEmpty) {
+        sheet.getRange(startRow + 2, 17, 6, 10).clearContent();
+      }
+      continue;
+    }
 
     const resObj = odd_gMC(input.toString().trim(), pDict);
     
-    // Row 1 (상단 컨펌: Q7, V7 위치)
+    // Row 1 (상단 컨펌: Q7:U8, V7:Z8)
     resObj.row1.forEach((c, idx) => {
       if (idx < 2) {
         const target = sheet.getRange(startRow + 2, 17 + (idx * 5), 2, 5);
@@ -22,7 +34,7 @@ function odd_runConfirmationAutomation() {
       }
     });
 
-    // Row 2 (하단 컨펌: Q9, V9 위치)
+    // Row 2 (하단 컨펌: Q9:U10, V9:Z10)
     resObj.row2.forEach((c, idx) => {
       if (idx < 2) {
         const target = sheet.getRange(startRow + 4, 17 + (idx * 5), 2, 5);

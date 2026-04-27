@@ -82,12 +82,6 @@ function odd_autoCalculation(e) {
   if (typeof calculateSpreadChange === 'function') {
     calculateSpreadChange(e);
   }
-}
-
-  // 4. 26행/27행 자동 수식 계산 (스프레드 증감.gs 호출)
-  if (typeof calculateSpreadChange === 'function') {
-    calculateSpreadChange(e);
-  }
 
   // 5. 27행/30행 스왑 보정 (필요시 활성화)
   if ((row === 27 || row === 30) && (col >= 2 && col <= 8)) {

@@ -63,47 +63,22 @@ function odd_autoCalculation(e) {
     }
   }
 
-  // 2. 컨포 자동 생성 및 자동 삭제 처리
-  var lastRow = e.range.getLastRow();
-  var lastCol = e.range.getLastColumn();
-  if (lastCol >= 17 && col <= 21 && lastRow >= 5) {
-    SpreadsheetApp.flush();
-    var allInputVals = sheet.getRange(5, 17, 201, 5).getValues();
-    var anyContent = false;
-
-    for (var bRow = 5; bRow <= 205; bRow += 8) {
-      var overlapsInput = (row <= bRow + 1) && (lastRow >= bRow);
-      if (!overlapsInput) continue;
-
-      var offset = bRow - 5;
-      var rowA = (offset < allInputVals.length) ? allInputVals[offset] : [];
-      var rowB = (offset + 1 < allInputVals.length) ? allInputVals[offset + 1] : [];
-      var inputVals = rowA.concat(rowB);
-      var isEmpty = inputVals.every(function(v) { return v === "" || v === null || String(v).trim() === ""; });
-      var inputBlock = sheet.getRange(bRow, 17, 2, 5);
-
-      if (isEmpty) {
-        inputBlock.merge().setHorizontalAlignment("center").setVerticalAlignment("middle").setWrap(false).setFontSize(9);
-        sheet.getRange(bRow + 2, 17, 6, 15).clearContent();
-      } else {
-        anyContent = true;
-        inputBlock.merge().setHorizontalAlignment("center").setVerticalAlignment("middle").setWrap(false).setFontSize(9);
-      }
-    }
-    if (anyContent && typeof odd_runConfirmationAutomation === 'function') {
-      odd_runConfirmationAutomation();
-    }
+  // 2. 컨포 자동 생성 처리 (Q17:U21)
+  if (col >= 17 && col <= 21 && row >= 5) {
+     if (typeof odd_runConfirmationAutomation === 'function') odd_runConfirmationAutomation();
   }
 
-  // 3. J열(10열) Swap Point 수정 시 Daily(14열) 실시간 계산
-  if (col === 10 && row >= 5 && row <= 25) {
-    const pointInput = sheet.getRange(row, 10).getValue();
-    const daysValue = sheet.getRange(row, 13).getValue();
-    const dailyTarget = sheet.getRange(row, 14);
-    if (pointInput === "" || pointInput === null || isNaN(parseFloat(pointInput))) {
-      dailyTarget.clearContent();
-    } else if (daysValue && !isNaN(parseInt(daysValue)) && parseInt(daysValue) !== 0) {
-      dailyTarget.setValue(parseFloat(pointInput) / parseInt(daysValue));
+  // 3. Swap Point 수정 시 Daily 실시간 계산 (J열 수정 시)
+  // J(10) / M(13) -> O(15) 
+  // J(10) / N(14) -> P(16)
+  if (col === 10 && row >= 5 && row <= 16) {
+    const pt = sheet.getRange(row, 10).getValue();
+    const dToday = sheet.getRange(row, 13).getValue();
+    const dTom = sheet.getRange(row, 14).getValue();
+    
+    if (pt !== "" && !isNaN(parseFloat(pt))) {
+      if (dToday && !isNaN(dToday) && dToday != 0) sheet.getRange(row, 15).setValue(parseFloat(pt) / dToday);
+      if (dTom && !isNaN(dTom) && dTom != 0) sheet.getRange(row, 16).setValue(parseFloat(pt) / dTom);
     }
     odd_runODDSetupFinal(true);
   }

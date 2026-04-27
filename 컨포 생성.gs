@@ -3,29 +3,29 @@
  */
 
 function odd_runConfirmationAutomation() {
-  const sheet = SpreadsheetApp.getActive().getSheetByName("날짜 계산기") || SpreadsheetApp.getActive().getSheetByName("날짜계산기");
+  const sheet = SpreadsheetApp.getActive().getSheetByName("날짜 계산기");
   if (!sheet) return;
   const pDict = odd_parseC(sheet);
   
   for (let startRow = 5; startRow <= 205; startRow += 8) {
-    const vals = sheet.getRange(startRow, 16, 2, 5).getValues().flat();
+    const vals = sheet.getRange(startRow, 17, 2, 5).getValues().flat(); // Q열(17)로 이동
     const input = vals.find(v => String(v).includes("<") || String(v).includes(">"));
     if (!input) continue;
 
     const resObj = odd_gMC(input.toString().trim(), pDict);
     
-    // Row 1 (상단 컨펌: P7, U7 위치)
+    // Row 1 (상단 컨펌: Q7, V7 위치)
     resObj.row1.forEach((c, idx) => {
       if (idx < 2) {
-        const target = sheet.getRange(startRow + 2, 16 + (idx * 5), 2, 5);
+        const target = sheet.getRange(startRow + 2, 17 + (idx * 5), 2, 5);
         target.merge().setValue(c).setHorizontalAlignment("left").setVerticalAlignment("middle").setWrap(true).setFontSize(9);
       }
     });
 
-    // Row 2 (하단 컨펌: P9, U9 위치)
+    // Row 2 (하단 컨펌: Q9, V9 위치)
     resObj.row2.forEach((c, idx) => {
       if (idx < 2) {
-        const target = sheet.getRange(startRow + 4, 16 + (idx * 5), 2, 5);
+        const target = sheet.getRange(startRow + 4, 17 + (idx * 5), 2, 5);
         target.merge().setValue(c).setHorizontalAlignment("left").setVerticalAlignment("middle").setWrap(true).setFontSize(9);
       }
     });
